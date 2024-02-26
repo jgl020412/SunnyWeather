@@ -1,5 +1,6 @@
 package com.sunnyweather.android.ui.weather
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -24,6 +25,7 @@ class WeatherActivity : AppCompatActivity() {
 
     private lateinit var binging: ActivityWeatherBinding
 
+    @SuppressLint("ResourceAsColor")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val decorView = window.decorView
@@ -47,9 +49,18 @@ class WeatherActivity : AppCompatActivity() {
                 Toast.makeText(this, "无法成功获取天气情况", Toast.LENGTH_SHORT).show()
                 result.exceptionOrNull()?.printStackTrace()
             }
+            binging.swipeRefresh.isRefreshing = false
         })
-        Log.d(Companion.TAG, "onCreate: ${viewModel.locationLng}, ${viewModel.locationLat}")
+        binging.swipeRefresh.setColorSchemeColors(R.color.colorPrimary)
+        refreshWeather()
+        binging.swipeRefresh.setOnRefreshListener {
+            refreshWeather()
+        }
+    }
+
+    fun refreshWeather() {
         viewModel.refreshWeather(viewModel.locationLng, viewModel.locationLat)
+        binging.swipeRefresh.isRefreshing = true
     }
 
     private fun showWeatherInfo(weather: Weather) {
