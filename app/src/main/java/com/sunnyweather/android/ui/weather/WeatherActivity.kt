@@ -1,15 +1,19 @@
 package com.sunnyweather.android.ui.weather
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.sunnyweather.android.R
@@ -21,7 +25,7 @@ import java.util.Locale
 
 class WeatherActivity : AppCompatActivity() {
 
-    private val viewModel by lazy { ViewModelProvider(this)[WeatherViewModel::class.java] }
+    val viewModel by lazy { ViewModelProvider(this)[WeatherViewModel::class.java] }
 
     private lateinit var binging: ActivityWeatherBinding
 
@@ -42,7 +46,6 @@ class WeatherActivity : AppCompatActivity() {
             intent.getStringExtra("place_name") ?: ""
         viewModel.weatherLiveData.observe(this, Observer { result ->
             val weather = result.getOrNull()
-            Log.d(TAG, "onCreate: ${result}")
             if (weather != null) {
                 showWeatherInfo(weather)
             } else {
@@ -56,6 +59,23 @@ class WeatherActivity : AppCompatActivity() {
         binging.swipeRefresh.setOnRefreshListener {
             refreshWeather()
         }
+        binging.now.navBtn.setOnClickListener {
+            binging.drawerLayout.openDrawer(GravityCompat.START)
+        }
+        binging.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+
+            override fun onDrawerClosed(drawerView: View) {
+                val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                manager.hideSoftInputFromWindow(drawerView.windowToken,
+                    InputMethodManager.HIDE_NOT_ALWAYS)
+            }
+
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
+
+            override fun onDrawerOpened(drawerView: View) {}
+
+            override fun onDrawerStateChanged(newState: Int) {}
+        })
     }
 
     fun refreshWeather() {
@@ -91,7 +111,7 @@ class WeatherActivity : AppCompatActivity() {
             val sky = getSky(skycon.value)
             skyIcon.setImageResource(sky.icon)
             skyInfo.text = sky.info
-            val tempText = "${temperature.min.toInt()} ~ ${temperature.max.toInt()} ℃"
+            val tempText = "${temperature.min.toInt()} ~ ${temperature.max.toInt()}\u2103"
             temperatureInfo.text = tempText
             binging.forecast.forecastLayout.addView(view)
         }
@@ -102,10 +122,6 @@ class WeatherActivity : AppCompatActivity() {
         binging.lifeIndex.ultravioletText.text = lifeIndex.ultraviolet[0].desc
         binging.lifeIndex.carWashingText.text = lifeIndex.carWashing[0].desc
         binging.weatherLayout.visibility = View.VISIBLE
-    }
-
-    companion object {
-        private const val TAG = "WeatherActivity"
     }
 
 }
